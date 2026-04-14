@@ -49,6 +49,8 @@
 
 #define DISP_ID_DET (262 + 123)
 
+#define TOUCH_MODE_REPORT_RATE 21
+
 #ifdef CONFIG_TOUCH_BOOST
 extern void touch_irq_boost(void);
 #endif
@@ -2312,6 +2314,9 @@ out:
    */
 	/* open esd */
 	goodix_ts_blocking_notify(NOTIFY_RESUME, NULL);
+        if (core_data->high_report_rate) {
+		core_data->hw_ops->switch_report_rate(core_data, true);
+	}
 
 	/*update ic_info 仿照K9E代码把更新IC信息这部分打开 *屏蔽后确认每次唤醒后边缘抑制数据能下发成功就可以*/
 	/*hw_ops->get_ic_info(core_data, &core_data->ic_info);*/
@@ -3324,6 +3329,15 @@ static int goodix_set_cur_value(int gtp_mode, int gtp_value)
 		ts_info("Touch_Nonui_Mode value [%d]\n", gtp_value);
 		queue_work(goodix_core_data->gesture_wq,
 			   &goodix_core_data->gesture_work);
+		return 0;
+        }
+
+        if (gtp_mode == TOUCH_MODE_REPORT_RATE && goodix_core_data &&
+	    gtp_value >= 0) {
+		ts_info("Setting report rate to %d\n", gtp_value);
+		if (cd->hw_ops->switch_report_rate) {
+			cd->hw_ops->switch_report_rate(cd, gtp_value);
+		}
 		return 0;
 	}
 	/*

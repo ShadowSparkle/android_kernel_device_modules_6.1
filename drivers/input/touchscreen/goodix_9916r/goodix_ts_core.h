@@ -631,12 +631,12 @@ struct goodix_ts_hw_ops {
 		struct goodix_ts_core *cd); /* clean sync flag */
 	int (*get_capacitance_data)(struct goodix_ts_core *cd,
 				    struct ts_rawdata_info *info);
+        int (*switch_report_rate)(struct goodix_ts_core *cd, bool high);
 	int (*charger_on)(struct goodix_ts_core *cd, bool on);
 	int (*palm_on)(struct goodix_ts_core *cd, bool on);
 	int (*game)(struct goodix_ts_core *cd, u8 data0, u8 data1);
 	int (*get_frame_data)(struct goodix_ts_core *cd,
 			      struct ts_framedata *info);
-	int (*switch_report_rate)(struct goodix_ts_core *cd, bool on);
 	int (*read_flash)(struct goodix_ts_core *cd, unsigned int addr,
 			  unsigned char *data, unsigned int len);
 	int (*write_flash)(struct goodix_ts_core *cd, unsigned int addr,
@@ -766,6 +766,8 @@ struct goodix_ts_core {
 	bool tp_pm_suspend;
 	struct completion pm_resume_completion;
 	struct notifier_block notifier;
+
+        bool high_report_rate;
 };
 
 /* external module structures */

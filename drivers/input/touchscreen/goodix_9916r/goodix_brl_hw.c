@@ -2016,20 +2016,24 @@ exit:
 }
 
 #define GOODIX_HIGH_RATE_CMD 0xC1
-static int brl_switch_report_rate(struct goodix_ts_core *cd, bool on)
+static int brl_switch_report_rate(struct goodix_ts_core *cd, bool high)
 {
 	struct goodix_ts_cmd cmd;
+	int ret = 0;
 
 	cmd.cmd = GOODIX_HIGH_RATE_CMD;
-	cmd.len = 6;
-	cmd.data[0] = (on == true) ? 1 : 0;
-	if (cd->hw_ops->send_cmd(cd, &cmd)) {
-		ts_err("failed send report rate cmd, on = %d", on);
-		return -EINVAL;
+	cmd.len = 5;
+	cmd.data[0] = high;
+	ret = cd->hw_ops->send_cmd(cd, &cmd);
+	if (ret < 0) {
+		ts_err("failed to send report rate cmd, high = %d", high);
+		goto exit;
 	}
-	ts_info("reprot rate switch: %s", (on == true) ? "480HZ" : "240HZ");
+	ts_info("report rate switch: %s", high ? "480HZ" : "240HZ");
+	cd->high_report_rate = high;
 
-	return 0;
+exit:
+	return ret;
 }
 
 static struct goodix_ts_hw_ops brl_hw_ops = {
@@ -2055,11 +2059,11 @@ static struct goodix_ts_hw_ops brl_hw_ops = {
 	.get_capacitance_data = brl_get_capacitance_data,
 	.charger_on = brl_charger_on,
 	.palm_on = brl_palm_on,
+        .switch_report_rate = brl_switch_report_rate,
 #ifdef GOODIX_XIAOMI_TOUCHFEATURE
 	.game = brl_game,
 #endif
 	.get_frame_data = brl_get_frame_data,
-	.switch_report_rate = brl_switch_report_rate,
 };
 
 struct goodix_ts_hw_ops *goodix_get_hw_ops(void)
