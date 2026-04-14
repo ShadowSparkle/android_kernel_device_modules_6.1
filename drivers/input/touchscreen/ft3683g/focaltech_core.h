@@ -324,6 +324,7 @@ struct fts_ts_data {
 	struct tp_info tpinfo;
 	bool doze_test;
 	bool opendump;
+        bool high_report_rate;
 	unsigned long touch_id;
 };
 
@@ -377,6 +378,7 @@ int fts_write_reg(u8 addr, u8 value);
 void fts_hid2std(void);
 int fts_bus_init(struct fts_ts_data *ts_data);
 int fts_bus_exit(struct fts_ts_data *ts_data);
+int fts_switch_report_rate(struct fts_ts_data *ts_data, bool enable);
 int fts_spi_transfer_direct(u8 *writebuf, u32 writelen, u8 *readbuf,
 			    u32 readlen);
 

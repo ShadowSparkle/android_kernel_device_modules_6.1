@@ -193,6 +193,9 @@ void fts_tp_state_recovery(struct fts_ts_data *ts_data)
 	fts_gesture_recovery(ts_data);
 	/* recover TP report_rate state 0x92 */
 	fts_report_rate_recovery(ts_data);
+        if (ts_data->high_report_rate) {
+		fts_switch_report_rate(ts_data, ts_data->high_report_rate);
+	}
 #ifdef FTS_XIAOMI_TOUCHFEATURE
 	/* recover TP game mode state */
 	fts_game_mode_recovery(ts_data);
@@ -2699,18 +2702,18 @@ static void fts_update_touchmode_data(struct fts_ts_data *ts_data)
 }
 
 /* support 480HZ report rate by interpolation */
-#define FTS_HIGH_RATE_CMD 0xC3
-int fts_switch_report_rate(struct fts_ts_data *cd, bool on)
+#define FTS_HIGH_RATE_CMD		0xC3
+int fts_switch_report_rate(struct fts_ts_data *ts_data, bool enable)
 {
 	int ret = 0;
 
-	ret = fts_write_reg(FTS_HIGH_RATE_CMD, (on == true) ? 1 : 0);
+	ret = fts_write_reg(FTS_HIGH_RATE_CMD, (enable == true) ? 1 : 0);
 	if (ret < 0) {
-		FTS_ERROR("failed send report rate cmd, on = %d", on);
+		FTS_ERROR("failed send report rate cmd, on = %d", enable);
 		return -EINVAL;
 	} else {
-		FTS_INFO("reprot rate switch: %s",
-			 (on == true) ? "480HZ" : "240HZ");
+		ts_data->high_report_rate = enable;
+		FTS_INFO("report rate switch: %s", (enable == true) ? "480HZ" : "240HZ");
 	}
 
 	return 0;
@@ -2797,11 +2800,11 @@ static int fts_set_cur_value(int mode, int value)
 		return 0;
 	}
 	if (mode == Touch_Empty_Int) {
-		fts_htc_enable_empty_int(!!value);
+                fts_htc_enable_empty_int(!!value);
 		return 0;
 	}
-	if (mode == Touch_Super_Report) {
-		fts_switch_report_rate(fts_data, !!value);
+        if (mode == Touch_Super_Report) {
+                fts_switch_report_rate(fts_data, value != 0 ? true : false);
 		return 0;
 	}
 	if (mode == Touch_Idle_Scan_Rate) {
